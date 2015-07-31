@@ -6,15 +6,15 @@ import (
   "github.com/aws/aws-sdk-go/aws/awserr"
   "github.com/aws/aws-sdk-go/aws/awsutil"
   "github.com/aws/aws-sdk-go/service/s3"
+  "github.com/aws/aws-sdk-go/service/s3/s3manager"
   "github.com/codegangsta/cli"
   "os"
   "fmt"
 )
 
 func listobjects(region, bucket string) {
-  aws.DefaultConfig.Region = aws.String(region)
-
-  svc := s3.New(nil)
+  config := aws.NewConfig().WithRegion(region)
+  svc := s3.New(config)
 
   params := &s3.ListObjectsInput{
   	Bucket:       aws.String(bucket), // Required
@@ -46,9 +46,8 @@ func listobjects(region, bucket string) {
 }
 
 func list(region string) {
-  aws.DefaultConfig.Region = aws.String(region)
-
-  svc := s3.New(nil)
+  config := aws.NewConfig().WithRegion(region)
+  svc := s3.New(config)
 
   var params *s3.ListBucketsInput
   resp, err := svc.ListBuckets(params)
