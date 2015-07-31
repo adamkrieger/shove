@@ -1,13 +1,15 @@
 // go get -u github.com/aws/aws-sdk-go/...
 package main
 
-import "github.com/aws/aws-sdk-go/aws"
-import "github.com/aws/aws-sdk-go/aws/awserr"
-import "github.com/aws/aws-sdk-go/aws/awsutil"
-import "github.com/aws/aws-sdk-go/service/s3"
-import "fmt"
+import (
+  "github.com/aws/aws-sdk-go/aws"
+  "github.com/aws/aws-sdk-go/aws/awserr"
+  "github.com/aws/aws-sdk-go/aws/awsutil"
+  "github.com/aws/aws-sdk-go/service/s3"
+  "fmt"
+)
 
-func main() {
+func list() {
   aws.DefaultConfig.Region = aws.String("us-west-2")
 
   svc := s3.New(nil)
@@ -32,4 +34,8 @@ func main() {
 
   // Pretty-print the response data.
   fmt.Println(awsutil.Prettify(resp))
+}
+
+func main() {
+  list()
 }
