@@ -79,7 +79,7 @@ func main() {
   app.Flags = []cli.Flag {
     cli.StringFlag{
       Name: "region, r",
-      Value: "us-west-2",
+      Value: "us-east-1",
       Usage: "Region to communicate with.",
     },
   }
