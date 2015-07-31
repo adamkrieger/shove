@@ -42,15 +42,22 @@ func main() {
   app := cli.NewApp()
   app.Name = "shove"
   app.Usage = "Manage and push files to an S3 bucket."
-  app.Flags = []cli.Flag {
-    cli.StringFlag{
-      Name: "region, r",
-      Value: "us-west-2",
-      Usage: "Region to communicate with.",
+  app.Commands = []cli.Command{
+    {
+      Name: "list",
+      Aliases: []string{"l"},
+      Usage: "List available buckets.",
+      Flags: []cli.Flag {
+        cli.StringFlag{
+          Name: "region, r",
+          Value: "us-west-2",
+          Usage: "Region to communicate with.",
+        },
+      },
+      Action: func(c *cli.Context) {
+        list(c.String("region"))
+      },
     },
-  }
-  app.Action = func(c *cli.Context) {
-    list(c.String("region"))
   }
 
   app.Run(os.Args)
