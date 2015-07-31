@@ -6,11 +6,13 @@ import (
   "github.com/aws/aws-sdk-go/aws/awserr"
   "github.com/aws/aws-sdk-go/aws/awsutil"
   "github.com/aws/aws-sdk-go/service/s3"
+  "github.com/codegangsta/cli"
+  "os"
   "fmt"
 )
 
-func list() {
-  aws.DefaultConfig.Region = aws.String("us-west-2")
+func list(region string) {
+  aws.DefaultConfig.Region = aws.String(region)
 
   svc := s3.New(nil)
 
@@ -37,5 +39,19 @@ func list() {
 }
 
 func main() {
-  list()
+  app := cli.NewApp()
+  app.Name = "shove"
+  app.Usage = "Manage and push files to an S3 bucket."
+  app.Flags = []cli.Flag {
+    cli.StringFlag{
+      Name: "region, r",
+      Value: "us-west-2",
+      Usage: "Region to communicate with.",
+    },
+  }
+  app.Action = func(c *cli.Context) {
+    list(c.String("region"))
+  }
+
+  app.Run(os.Args)
 }
