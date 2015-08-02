@@ -1,4 +1,3 @@
-// go get -u github.com/aws/aws-sdk-go/...
 package main
 
 import (
@@ -9,6 +8,8 @@ import (
   "github.com/aws/aws-sdk-go/service/s3/s3manager"
   "github.com/codegangsta/cli"
   "os"
+  "log"
+  "path/filepath"
   "fmt"
 )
 
@@ -71,6 +72,56 @@ func list(region string) {
   fmt.Println(awsutil.Prettify(resp))
 }
 
+type fileWalk chan string
+
+func (f fileWalk) Walk(path string, info os.FileInfo, err error) error {
+    if err != nil {
+        return err
+    }
+    if !info.IsDir() {
+        f <- path
+    }
+    return nil
+}
+
+func upload(region, bucket, directory string) {
+  fmt.Println(bucket)
+  prefix := ""
+
+  walker := make(fileWalk)
+  go func() {
+      // Gather the files to upload by walking the path recursively.
+      if err := filepath.Walk(directory, walker.Walk); err != nil {
+          log.Fatalln("Walk failed:", err)
+      }
+      close(walker)
+  }()
+
+  // For each file found walking upload it to S3.
+  aws.DefaultConfig.Region = aws.String(region)
+  uploader := s3manager.NewUploader(nil)
+  for path := range walker {
+      rel, err := filepath.Rel(directory, path)
+      if err != nil {
+          log.Fatalln("Unable to get relative path:", path, err)
+      }
+      file, err := os.Open(path)
+      if err != nil {
+          log.Println("Failed opening file", path, err)
+          continue
+      }
+      defer file.Close()
+      _, err = uploader.Upload(&s3manager.UploadInput{
+          Bucket: &bucket,
+          Key:    aws.String(filepath.Join(prefix, rel)),
+          Body:   file,
+      })
+      if err != nil {
+          log.Fatalln("Failed to upload", path, err)
+      }
+  }
+}
+
 func main() {
   app := cli.NewApp()
   app.Name = "shove"
@@ -103,6 +154,30 @@ func main() {
       },
       Action: func(c *cli.Context) {
         listobjects(c.GlobalString("region"), c.String("bucket"))
+      },
+    },
+    {
+      Name: "push",
+      Aliases: []string{"p"},
+      Usage: "Pushes the contents to the bucket.",
+      Flags: []cli.Flag {
+        cli.StringFlag{
+          Name: "directory, d",
+          Usage: "Path containing files to be uploaded.",
+        },
+        cli.StringFlag{
+          Name: "bucket, b",
+          Usage: "Name of the bucket.",
+        },
+      },
+      Action: func(c *cli.Context) {
+        // ./shove push -d "./test" -b "yourbucketname"
+        bucket := c.String("bucket")
+        if(bucket != ""){
+          upload(c.GlobalString("region"), bucket, c.String("directory"))
+        }else{
+          fmt.Println("Bucket cannot be blank.")
+        }
       },
     },
   }
