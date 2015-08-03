@@ -5,7 +5,10 @@ import (
   "github.com/aws/aws-sdk-go/aws/awserr"
   "github.com/aws/aws-sdk-go/aws/awsutil"
   "github.com/aws/aws-sdk-go/service/s3"
+  "github.com/aws/aws-sdk-go/service/s3/s3manager"
   "fmt"
+  "os"
+  "log"
 )
 
 func ListBuckets(region string) {
@@ -65,4 +68,22 @@ func ListBucketContents(region, bucket string) {
 
   // Pretty-print the response data.
   fmt.Println(awsutil.Prettify(resp))
+}
+
+func BuildUploader(region string) *s3manager.Uploader {
+  aws.DefaultConfig.Region = aws.String(region)
+  uploader := s3manager.NewUploader(nil)
+  return uploader
+}
+
+func UploadFile(uploader *s3manager.Uploader, bucket string, path string, contentType string, file *os.File) {
+  _, err := uploader.Upload(&s3manager.UploadInput{
+      Bucket: &bucket,
+      Key:    aws.String(path),
+      Body:   file,
+      ContentType: &contentType,
+  })
+  if err != nil {
+      log.Fatalln("Failed to upload", path, err)
+  }
 }

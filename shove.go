@@ -2,8 +2,8 @@ package main
 
 import (
   "github.com/aws/aws-sdk-go/aws"
-  "github.com/aws/aws-sdk-go/service/s3/s3manager"
   "github.com/codegangsta/cli"
+  "github.com/fatih/color"
   "os"
   "log"
   "path/filepath"
@@ -36,6 +36,8 @@ func (f fileWalk) Walk(path string, info os.FileInfo, err error) error {
 }
 
 func upload(region, bucket, directory string) {
+  skipColor := color.New(color.FgRed).SprintFunc()
+
   fmt.Println(bucket)
   prefix := ""
 
@@ -50,7 +52,9 @@ func upload(region, bucket, directory string) {
 
   // For each file found walking upload it to S3.
   aws.DefaultConfig.Region = aws.String(region)
-  uploader := s3manager.NewUploader(nil)
+
+  uploader := s3mgmt.BuildUploader(region)
+
   for path := range walker {
       rel, err := filepath.Rel(directory, path)
       if err != nil {
@@ -61,19 +65,24 @@ func upload(region, bucket, directory string) {
           log.Println("Failed opening file", path, err)
           continue
       }
-      defer file.Close()
-      contentType := getContentType(filepath.Ext(path))
-      _, err = uploader.Upload(&s3manager.UploadInput{
-          Bucket: &bucket,
-          Key:    aws.String(filepath.Join(prefix, rel)),
-          Body:   file,
-          ContentType: &contentType,
-      })
+      fileInfo, err := file.Stat()
       if err != nil {
-          log.Fatalln("Failed to upload", path, err)
+        log.Println("Failed getting file stats", path, err)
       }
 
-      // fmt.Println(prefix, rel, filepath.Ext(path), getContentType(filepath.Ext(path)))
+      fileEmpty := fileInfo.Size() == 0
+
+      defer file.Close()
+      contentType := getContentType(filepath.Ext(path))
+      destinationPath := filepath.Join(prefix, rel)
+
+      fmt.Println(prefix, rel, contentType, fileInfo.Size(), fileEmpty)
+
+      if fileEmpty {
+        fmt.Printf("%s", skipColor("Empty"))
+      } else {
+        s3mgmt.UploadFile(uploader, bucket, destinationPath, contentType, file)
+      }
   }
 }
 
