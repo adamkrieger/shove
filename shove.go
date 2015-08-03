@@ -75,11 +75,14 @@ func upload(region, bucket, directory string) {
       defer file.Close()
       contentType := getContentType(filepath.Ext(path))
       destinationPath := filepath.Join(prefix, rel)
+      fileName := filepath.Base(path)
 
-      fmt.Println(prefix, rel, contentType, fileInfo.Size(), fileEmpty)
+      fmt.Println(prefix, rel, contentType, fileInfo.Size(), fileEmpty, fileName, destinationPath)
 
       if fileEmpty {
-        fmt.Printf("%s", skipColor("Empty"))
+        fmt.Printf("%s", skipColor("Skipped (empty)"))
+      } else if fileName == ".DS_Store" {
+        fmt.Printf("%s", skipColor("Skipped (.DSStore)"))
       } else {
         s3mgmt.UploadFile(uploader, bucket, destinationPath, contentType, file)
       }
