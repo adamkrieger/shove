@@ -92,6 +92,7 @@ func upload(region, bucket, directory string) {
 func main() {
   app := cli.NewApp()
   app.Name = "shove"
+  app.Version = "0.1.0"
   app.Usage = "Manage and push files to an S3 bucket."
   app.Flags = []cli.Flag {
     cli.StringFlag{
