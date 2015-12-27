@@ -2,6 +2,7 @@ package s3mgmt
 
 import (
   "github.com/aws/aws-sdk-go/aws"
+  "github.com/aws/aws-sdk-go/aws/session"
   "github.com/aws/aws-sdk-go/aws/awserr"
   "github.com/aws/aws-sdk-go/aws/awsutil"
   "github.com/aws/aws-sdk-go/service/s3"
@@ -13,7 +14,8 @@ import (
 
 func ListBuckets(region string) {
   config := aws.NewConfig().WithRegion(region)
-  svc := s3.New(config)
+  sess := session.New(config)
+  svc := s3.New(sess)
 
   var params *s3.ListBucketsInput
   resp, err := svc.ListBuckets(params)
@@ -39,7 +41,7 @@ func ListBuckets(region string) {
 
 func ListBucketContents(region, bucket string) {
   config := aws.NewConfig().WithRegion(region)
-  svc := s3.New(config)
+  svc := s3.New(session.New(config))
 
   params := &s3.ListObjectsInput{
   	Bucket:       aws.String(bucket), // Required
@@ -71,8 +73,9 @@ func ListBucketContents(region, bucket string) {
 }
 
 func BuildUploader(region string) *s3manager.Uploader {
-  aws.DefaultConfig.Region = aws.String(region)
-  uploader := s3manager.NewUploader(nil)
+  config := aws.NewConfig().WithRegion(region)
+  sess := session.New(config)
+  uploader := s3manager.NewUploader(sess)
   return uploader
 }
 
