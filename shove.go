@@ -8,7 +8,7 @@ import (
   "log"
   "path/filepath"
   "fmt"
-  "./s3mgmt"
+  "github.com/adamkrieger/shove/s3mgmt"
 )
 
 func getContentType(extension string) string {
