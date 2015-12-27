@@ -1,7 +1,6 @@
 package main
 
 import (
-  "github.com/aws/aws-sdk-go/aws"
   "github.com/codegangsta/cli"
   "github.com/fatih/color"
   "os"
@@ -50,9 +49,6 @@ func upload(region, bucket, directory string) {
       close(walker)
   }()
 
-  // For each file found walking upload it to S3.
-  aws.DefaultConfig.Region = aws.String(region)
-
   uploader := s3mgmt.BuildUploader(region)
 
   for path := range walker {
@@ -92,7 +88,7 @@ func upload(region, bucket, directory string) {
 func main() {
   app := cli.NewApp()
   app.Name = "shove"
-  app.Version = "0.1.0"
+  app.Version = "0.1.1"
   app.Usage = "Manage and push files to an S3 bucket."
   app.Flags = []cli.Flag {
     cli.StringFlag{
